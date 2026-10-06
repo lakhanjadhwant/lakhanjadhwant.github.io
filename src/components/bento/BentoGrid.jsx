@@ -2,11 +2,9 @@ import React, { useRef, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Sparkles } from 'lucide-react';
-import { stats } from '../../data/portfolio';
 
 import IntroCard from './IntroCard';
 import ProfileCard from './ProfileCard';
-import StatCard from './StatCard';
 import TechMarquee from './TechMarquee';
 import SkillsCard from './SkillsCard';
 import EducationCard from './EducationCard';
@@ -98,10 +96,6 @@ export default function BentoGrid() {
         <IntroCard />
         <ProfileCard />
 
-        {/* Row 3: 4 Stat Cards (3col each on desktop) */}
-        {stats.map((stat, idx) => (
-          <StatCard key={idx} value={stat.value} label={stat.label} />
-        ))}
 
         {/* Row 4: Tech Stack Marquee (12col) */}
         <TechMarquee />
