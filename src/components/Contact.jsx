@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Phone, MapPin, Linkedin, Github, Copy, Check, Send, Loader2, Sparkles } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Github, Copy, Check, Send, Loader2, Sparkles, ExternalLink } from 'lucide-react';
 import { profile } from '../data/portfolio';
 
 export default function Contact() {
@@ -9,6 +9,8 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [submissionMode, setSubmissionMode] = useState('web3forms'); // 'web3forms' | 'mailto'
+  const [lastMailtoUrl, setLastMailtoUrl] = useState('');
   const [submitError, setSubmitError] = useState('');
 
   const copyEmail = (e) => {
@@ -42,15 +44,18 @@ export default function Contact() {
 
     const accessKey = import.meta.env.VITE_WEB3FORMS_KEY;
 
-    // Graceful fallback to mailto if API key is not supplied
-    if (!accessKey || accessKey === 'your_web3forms_access_key_here') {
+    // Fallback to mailto if API key is not configured yet
+    if (!accessKey || accessKey.trim() === '' || accessKey === 'your_web3forms_access_key_here') {
       const subject = encodeURIComponent(`Portfolio Inquiry from ${formData.name}`);
       const body = encodeURIComponent(
         `${formData.message}\n\nSender: ${formData.name}\nEmail: ${formData.email}`
       );
-      window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      const mailtoUrl = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      setLastMailtoUrl(mailtoUrl);
+      setSubmissionMode('mailto');
       setIsSubmitting(false);
       setIsSuccess(true);
+      window.location.href = mailtoUrl;
       return;
     }
 
@@ -62,7 +67,7 @@ export default function Contact() {
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          access_key: accessKey,
+          access_key: accessKey.trim(),
           name: formData.name,
           email: formData.email,
           message: formData.message,
@@ -72,20 +77,20 @@ export default function Contact() {
 
       const data = await response.json();
       if (data.success) {
+        setSubmissionMode('web3forms');
         setIsSuccess(true);
         setFormData({ name: '', email: '', message: '' });
       } else {
-        setSubmitError(data.message || 'Something went wrong. Please try emailing directly.');
+        setSubmitError(data.message || 'Unable to submit through Web3Forms.');
       }
     } catch (err) {
-      // If network fails, prompt direct email
-      setSubmitError('Failed to send via Web3Forms. Opening your email client instead...');
-      setTimeout(() => {
-        const subject = encodeURIComponent(`Portfolio Inquiry from ${formData.name}`);
-        const body = encodeURIComponent(formData.message);
-        window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
-        setIsSuccess(true);
-      }, 1500);
+      const subject = encodeURIComponent(`Portfolio Inquiry from ${formData.name}`);
+      const body = encodeURIComponent(formData.message);
+      const mailtoUrl = `mailto:${profile.email}?subject=${subject}&body=${body}`;
+      setLastMailtoUrl(mailtoUrl);
+      setSubmissionMode('mailto');
+      setIsSuccess(true);
+      window.location.href = mailtoUrl;
     } finally {
       setIsSubmitting(false);
     }
@@ -228,22 +233,58 @@ export default function Contact() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
                 transition={{ duration: 0.4 }}
-                className="py-12 flex flex-col items-center text-center space-y-4"
+                className="py-10 flex flex-col items-center text-center space-y-4"
               >
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                  <Check className="w-8 h-8" />
-                </div>
-                <h3 className="font-heading font-bold text-2xl text-white">Message Dispatched!</h3>
-                <p className="text-sm text-neutral-300 max-w-md">
-                  Thank you for reaching out. I have received your note and will get back to you shortly.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsSuccess(false)}
-                  className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/15 transition-all"
-                >
-                  Send another message
-                </button>
+                {submissionMode === 'web3forms' ? (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                      <Check className="w-8 h-8" />
+                    </div>
+                    <h3 className="font-heading font-bold text-2xl text-white">Message Dispatched!</h3>
+                    <p className="text-sm text-neutral-300 max-w-md">
+                      Thank you for reaching out. Your message has been sent directly to my inbox and I will get back to you shortly.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsSuccess(false)}
+                      className="mt-4 px-6 py-2.5 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/15 transition-all"
+                    >
+                      Send another message
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-16 h-16 rounded-full bg-blue-500/20 border border-blue-500/40 text-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                      <Mail className="w-8 h-8" />
+                    </div>
+                    <h3 className="font-heading font-bold text-2xl text-white">Email Draft Created</h3>
+                    <p className="text-sm text-neutral-300 max-w-md leading-relaxed">
+                      Your message was pre-filled in your device&apos;s default email app. Please ensure you click <strong className="text-white font-semibold">Send</strong> in your mail app, or send directly to <a href={`mailto:${profile.email}`} className="text-cyan-400 underline">{profile.email}</a>.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                      {lastMailtoUrl && (
+                        <a
+                          href={lastMailtoUrl}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white shadow-md shadow-blue-500/25 transition-all"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Open Mail App Again</span>
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsSuccess(false)}
+                        className="px-5 py-2.5 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/15 transition-all"
+                      >
+                        Edit Message
+                      </button>
+                    </div>
+                    <div className="mt-4 p-3.5 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-neutral-400 max-w-md text-left">
+                      <span className="text-amber-300 font-medium block mb-1">💡 For automatic delivery to your inbox:</span>
+                      Add your free Web3Forms Access Key to your <code className="text-neutral-200 bg-white/10 px-1 py-0.5 rounded">.env</code> file (<code className="text-cyan-300">VITE_WEB3FORMS_KEY</code>) to receive messages directly without needing an email app.
+                    </div>
+                  </>
+                )}
               </motion.div>
             ) : (
               <motion.form
