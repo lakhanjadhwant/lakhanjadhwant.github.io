@@ -1,0 +1,307 @@
+# Prompt: Build Lakhan Jadhwant's Portfolio (Animated Scroll Hero + Bento About + Experience + Projects + Contact)
+
+Create a complete, production-ready React portfolio website for **Lakhan Jadhwant, AI Engineer**. It must have a fullscreen scroll-driven animated Hero (generative neural-network canvas background, NO video), a Bento Grid "About" section, an Experience timeline, a Projects section, and a Contact section. It will be hosted on **GitHub Pages** (static hosting, no backend), so every decision below accounts for that.
+
+**Working rules for the agent:**
+- Do NOT ask me questions. Where an asset or URL is missing, use the placeholder/fallback described and keep going.
+- Put ALL personal content in ONE file, `src/data/portfolio.js`, so I can edit text without touching components.
+- Generate every file (config, components, CSS, GitHub Actions workflow, README) so that `npm install && npm run dev` works immediately and `git push` deploys.
+
+---
+
+## 1. No Video, No Frames
+There is **no hero video** in this project. Do NOT use FFmpeg, do NOT create a `frames/` folder, and do NOT reference `hero-video.mp4`, `video-poster.webp` or any frame sequence anywhere. The Hero background is generated entirely in code (see section 7), so the project needs zero media files to look great. The only optional image is my profile photo.
+
+---
+
+## 2. Tech Stack
+- React 18 + Vite
+- **Tailwind CSS v3.4** (pin v3, use `tailwind.config.js` + `postcss.config.js`)
+- GSAP + ScrollTrigger (`gsap`)
+- Framer Motion (`framer-motion`)
+- Lenis smooth scroll (`lenis` package: `import Lenis from 'lenis'`)
+- `lucide-react` for icons
+- No router needed (single page with anchor links)
+
+---
+
+## 3. GitHub Pages Requirements (CRITICAL)
+1. `vite.config.js`: set `base: './'` (works for both `username.github.io` and `username.github.io/repo-name/`).
+2. NEVER hardcode absolute paths like `/profile.webp`. Build every public asset URL with `import.meta.env.BASE_URL`, e.g. `` `${import.meta.env.BASE_URL}profile.webp` ``.
+3. Add `.github/workflows/deploy.yml`: on push to `main`, run `npm ci`, `npm run build`, and deploy `dist` using `actions/upload-pages-artifact` + `actions/deploy-pages` (with `pages: write` and `id-token: write` permissions).
+4. Add a `package.json` script `"deploy"` as well (using `gh-pages`) as an alternative.
+5. Contact form has no backend: use **Web3Forms** (`https://api.web3forms.com/submit`, access key read from `import.meta.env.VITE_WEB3FORMS_KEY`). If the key is missing, gracefully fall back to opening a `mailto:` link with the message prefilled. Add `.env.example`.
+6. Include `README.md` with: install, run, how to replace assets, how to set the form key, how to enable GitHub Pages (Settings > Pages > Source: GitHub Actions).
+7. Add SEO basics in `index.html`: title "Lakhan Jadhwant | AI Engineer", meta description, Open Graph tags, theme-color `#000`, and an emoji/SVG favicon.
+
+---
+
+## 4. Personal Data (put all of this in `src/data/portfolio.js`)
+
+```js
+export const profile = {
+  name: "Lakhan Jadhwant",
+  role: "AI Engineer",
+  heroTitle: "AI Engineer",
+  tagline: "Building LLM, RAG & computer vision systems that work in the real world.",
+  email: "lakhanjadhwant@gmail.com",
+  phone: "+91 7566966302",
+  location: "India",
+  linkedin: "https://www.linkedin.com/in/lakhanjadhwant",   // assumption - editable
+  github: "https://github.com/lakhanjadhwant",               // assumption - editable
+  resumeUrl: "Lakhan_Jadhwant_Resume.pdf",                   // file in /public
+  summary: "AI Engineer with hands-on experience building AI/ML and Generative AI applications using Python, LLMs, RAG, LangChain, and FastAPI. Experienced in developing AI-powered solutions for document processing, automation, and real-world applications. Strong foundation in machine learning, software development, and AI automation."
+};
+
+export const stats = [
+  { value: "8.76", label: "CGPA (Dual Degree)" },
+  { value: "3", label: "AI/ML Internships" },
+  { value: "~90%", label: "Attendance processing time cut" },
+  { value: "~80%", label: "Faster healthcare chatbot responses" }
+];
+
+export const experience = [
+  {
+    company: "Novametrics AI", role: "AI Engineer Intern", period: "Jan 2026 - Jul 2026",
+    points: [
+      "Developed a drone-based computer vision segmentation pipeline using SAM 3 to detect 6+ object classes from aerial video footage.",
+      "Developed an RF-DETR-based road defect detection system to identify potholes, cracks, patches, and scaling from road imagery, automating defect identification for infrastructure inspection.",
+      "Experimented with 3D Gaussian Splatting to reconstruct 3D scenes from Insta360 video footage of interiors, roads, buildings, and buses."
+    ],
+    tags: ["SAM 3", "RF-DETR", "Computer Vision", "3D Gaussian Splatting"]
+  },
+  {
+    company: "Cornerstone Solutions", role: "Data Scientist Intern", period: "Nov 2025 - Dec 2025",
+    points: [
+      "Optimized an ANPR pipeline by integrating RF-DETR for license-plate detection with PaddleOCR for text recognition, improving automated plate-reading reliability.",
+      "Worked on developing a windmill inspection system using computer vision for automated fault detection and structural assessment."
+    ],
+    tags: ["RF-DETR", "PaddleOCR", "ANPR", "Computer Vision"]
+  },
+  {
+    company: "Novel Group", role: "AI/ML Intern", period: "Jun 2025 - Aug 2025",
+    points: [
+      "Engineered and trained a RASA chatbot that resolved a majority of healthcare queries, cutting manual workload and improving response speed by ~80%.",
+      "Built an AI-powered resume evaluation tool (Streamlit, FastAPI, LangChain, MongoDB) that analyzed resumes, delivered compatibility scores, and provided AI-driven feedback.",
+      "Designed and executed an outbound sales pipeline, boosting qualified lead generation by ~70%."
+    ],
+    tags: ["Rasa", "LangChain", "FastAPI", "Streamlit", "MongoDB"]
+  }
+];
+
+export const projects = [
+  {
+    title: "Multi Document RAG Chatbot",
+    summary: "Full-stack chatbot that lets users query multiple uploaded documents through context-aware AI responses.",
+    points: [
+      "Built with FastAPI (backend) and Streamlit (frontend).",
+      "LangChain retrieval pipeline with Gemini embeddings and Pinecone vector search to fetch the most relevant document context.",
+      "Integrated the Groq LLM API for low-latency, context-aware answers in real-time document Q&A."
+    ],
+    tags: ["FastAPI", "Streamlit", "LangChain", "Gemini Embeddings", "Pinecone", "Groq"],
+    github: "https://github.com/lakhanjadhwant", demo: ""   // placeholders, editable
+  },
+  {
+    title: "Face Recognition Attendance System",
+    summary: "Streamlit web app that automates classroom attendance using deep learning and GCP.",
+    points: [
+      "DeepFace with RetinaFace for detection and FaceNet512 embeddings for recognition.",
+      "scikit-learn cosine similarity between embeddings for accurate matching.",
+      "gspread integration updates Google Sheets in real time for instant attendance reports.",
+      "Eliminated manual entry and reduced processing time by ~90%, scalable to large classes."
+    ],
+    tags: ["DeepFace", "RetinaFace", "FaceNet512", "scikit-learn", "gspread", "GCP", "Streamlit"],
+    github: "https://github.com/lakhanjadhwant", demo: ""
+  }
+];
+
+export const skills = {
+  "Programming": ["Python", "C++"],
+  "Databases": ["MySQL", "MongoDB", "Pinecone", "ChromaDB", "FAISS"],
+  "Libraries": ["NumPy", "Pandas", "Matplotlib", "Seaborn", "NLTK", "spaCy", "Scikit-learn", "PyTorch", "TensorFlow"],
+  "AI / ML & GenAI": ["Machine Learning", "Deep Learning", "NLP", "Computer Vision", "RAG", "LLMs", "Prompt Engineering"],
+  "Frameworks & Platforms": ["LangChain", "LangGraph", "FastAPI", "Streamlit", "Rasa", "Dialogflow", "Roboflow", "AI Agents"],
+  "Cloud & DevOps": ["Google Cloud", "Docker"],
+  "Version Control": ["Git", "GitHub", "Bitbucket"]
+};
+
+export const education = [
+  { degree: "B.Tech + M.Tech (Dual Degree) in AI and Data Science", school: "Devi Ahilya Vishwavidyalaya", period: "2021 - 2026", score: "8.76 CGPA" },
+  { degree: "Higher Secondary", school: "School for Excellence", period: "2020 - 2021", score: "93.8%" }
+];
+
+export const certificates = ["PW - Data Science Master's", "Coursera - Data Analytics", "Oracle Cloud Infrastructure"];
+```
+
+---
+
+## 5. Assets in `/public` (all optional; every one needs a graceful fallback)
+
+```
+/profile.webp                   (my photo; fallback: gradient card with initials "LJ")
+/Lakhan_Jadhwant_Resume.pdf     (resume download)
+/og-image.webp                  (optional social preview)
+```
+
+Tech logos use remote icon CDNs (`https://cdn.jsdelivr.net/gh/devicons/devicon/icons/<name>/<name>-original.svg` or `https://cdn.simpleicons.org/<slug>/white`). Every `<img>` for a logo must have `onError` that hides the image so the text pill still shows. Never let a broken logo break layout.
+
+---
+
+## 6. Global Design
+- Dark theme, near-black `#050505` background, white text, accent gradient blue (`#3b82f6`) to violet (`#8b5cf6`) to cyan.
+- Fonts: **Syne** (headings, Google Fonts) and **Satoshi** (body, fontshare.com). Include a system-font fallback stack. Load fonts via `<link>` in `index.html` with `preconnect`.
+- Smooth scroll with Lenis at App level. Sync with GSAP: `lenis.on('scroll', ScrollTrigger.update)`, `gsap.ticker.add((t) => lenis.raf(t * 1000))`, `gsap.ticker.lagSmoothing(0)`. Destroy on unmount.
+- A slim fixed top navbar (appears after the hero is scrolled past or is always glass-blurred and small): links to About, Experience, Projects, Contact + Resume button. Mobile: hamburger menu using Framer Motion.
+- A thin scroll-progress bar at the very top.
+- Respect `prefers-reduced-motion`: render the Hero background as a static (non-animated) network, disable marquees and entry animations.
+- Accessible: semantic sections with ids, alt text, focus states, sufficient contrast.
+
+---
+
+## 7. SECTION 1: Hero (Fullscreen, Scroll-Driven, Code-Generated Background)
+
+### Behavior
+- Outer container height: `300vh` (scroll space). Inside: a `sticky top-0 h-screen` wrapper holding everything.
+- **Background = `<canvas>` neural-network / constellation animation** (no assets): ~60 nodes on desktop, ~30 on mobile, drifting slowly, with lines drawn between nodes closer than ~140px (opacity fades with distance). Node colors blend blue `#3b82f6`, violet `#8b5cf6`, cyan `#22d3ee`. Nodes gently repel/attract toward the mouse pointer on desktop. Handle `devicePixelRatio` (cap at 2), pause the loop when the tab is hidden or the hero is off-screen (IntersectionObserver), and clean up the `requestAnimationFrame` loop on unmount.
+- Add 2-3 large blurred gradient orbs (blue / violet) behind the canvas that slowly float (CSS or GSAP).
+- **Scroll-driven (GSAP ScrollTrigger, `scrub: 0.6`, `start: "top top"`, `end: "bottom bottom"`):**
+  - Canvas wrapper scales from 1 to 1.25 and node speed/line density increases slightly as progress goes 0 to 1.
+  - The main title and bottom content move up and fade out between ~70% and 100% progress so the next section arrives cleanly.
+  - Three short caption overlays fade in/out at roughly 20%, 45% and 70% progress: "LLMs & RAG", "Computer Vision", "Production AI" (large Syne text, centered, low opacity gradient text).
+- **Intro animation on load (Framer Motion or GSAP timeline):** the eyebrow "Lakhan Jadhwant" fades in, then each letter/word of "AI Engineer" reveals upward with a stagger, then the description and scroll indicator fade in.
+- Use `useLayoutEffect` with `gsap.context()` and `ctx.revert()` for cleanup. Set initial states with `gsap.set()` before animating (no FOUC).
+- **Mobile:** ignore height-only resize events (address-bar toggle); only resize canvas and call `ScrollTrigger.refresh()` when window width changes.
+- Reduced motion: draw one static frame of the network, no scroll scaling, show the title immediately.
+
+### Visual Design
+- Near-black background `#050505`.
+- Overlays (stacked above canvas): global darken `bg-black/10`; vignette `radial-gradient(circle, transparent 50%, rgba(0,0,0,0.4) 100%)`; bottom gradient `from-black/40`.
+- Subtle film-grain or fine dot-grid texture overlay at ~4% opacity (pure CSS).
+- CSS filter on the canvas container: `saturate(1.25)`.
+
+### Content (all white text)
+- **Top-right:** vertical stack of LinkedIn, GitHub, and Email links (icons + labels, hover underline).
+- **Bottom-left:** huge title "AI Engineer" in Syne (responsive: `text-5xl` mobile up to `text-8xl/9xl` desktop), with "Lakhan Jadhwant" as a small eyebrow label above it.
+- **Bottom-right:** short description (use `profile.tagline`) + animated scroll indicator (mouse icon on mobile, bouncing arrow on desktop).
+
+### Responsive
+- Mobile: single column, centered text, smaller fonts.
+- Desktop: flex layout with `justify-between`.
+
+---
+
+## 8. SECTION 2: Bento Grid (About, id="about")
+
+Section heading: "About" (Syne). CSS Grid, 12 columns on desktop (`lg:grid-cols-12`), single column on mobile, 2 columns on tablet where sensible. Use ONLY `col-span` / `row-span` and `auto-rows`. **Do NOT use negative margins.**
+
+```
+Row 1-2: [Intro Card 7col]            [Profile Photo 5col]
+Row 3:   [Stat][Stat][Stat][Stat]     (3col each)
+Row 4:   [Tech Stack Marquee 12col]
+Row 5-6: [Skills by Category 7col]    [Education 5col, then Certificates below it]
+```
+
+### Cards
+1. **Intro Card (7 cols, 2 rows):** Title "Hi, I'm Lakhan", the `profile.summary` text, a small "Open to AI/ML roles" green pulsing-dot badge, and two buttons: "Download Resume" and "Get in touch" (scrolls to Contact).
+2. **Profile Photo (5 cols, 2 rows):** `object-cover` full-height image, dark overlay + vignette, hover reveals an extra gradient. Fallback: gradient card with "LJ" initials if the image fails.
+3. **Stat cards (3 cols each, 1 row):** big animated count-up number (GSAP, triggered when visible) + label from `stats`.
+4. **Tech Stack Marquee (12 cols, 1 row):** infinite horizontal scroll (`animate-marquee`, content duplicated for a seamless loop, pause on hover). Items: Python, PyTorch, TensorFlow, LangChain, FastAPI, Streamlit, Docker, Google Cloud, MongoDB, MySQL, Pinecone, Git, GitHub, scikit-learn, Pandas, NumPy. Logo + name pills; invert filter for dark logos (GitHub, FastAPI etc.).
+5. **Skills by Category (7 cols, 2 rows):** render `skills` as grouped tag chips with the category label on each row. Chips have a subtle hover lift.
+6. **Education (5 cols, 1-2 rows):** both entries as a mini vertical timeline with the score highlighted.
+7. **Certificates (5 cols, 1 row):** 3 certificate chips with a small award icon.
+
+### Card Styling
+- Glass morphism: `bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl`
+- `shadow-lg hover:shadow-blue-500/20`, slight border brighten on hover.
+- Padding `p-6` to `p-8`.
+- GSAP entry animation: fade up with stagger via **`ScrollTrigger.batch()`**; set initial `opacity: 0, y: 40` with `gsap.set()` BEFORE animating.
+
+### Responsive
+- Mobile: stack all cards vertically, reasonable min-heights. Desktop: full grid.
+
+---
+
+## 9. SECTION 3: Experience (id="experience")
+- Vertical timeline: a glowing line down the left (desktop: centered line with alternating sides is acceptable, but left-aligned is preferred for readability).
+- One glass card per `experience` entry: company (Syne), role, period badge, bullet points, tag chips.
+- Cards reveal on scroll (Framer Motion `whileInView`, `once: true`), line "draws" as you scroll (GSAP scaleY scrubbed).
+
+## 10. SECTION 4: Projects (id="projects")
+- Two large glass cards from `projects` (side by side on desktop, stacked on mobile).
+- Each: title, summary, bullets, tech tag chips, and GitHub / Live Demo buttons (hide any button whose URL is empty).
+- Hover: gentle tilt/lift with Framer Motion and a soft blue glow.
+- Include a decorative abstract visual per card (CSS gradient mesh or inline SVG representing RAG pipeline vs face-recognition), no external images needed.
+
+## 11. SECTION 5: Contact + Footer (id="contact")
+- Big heading "Let's build something intelligent."
+- Left: email, phone, location, LinkedIn, GitHub as large clickable rows with icons and a copy-to-clipboard button for email (toast "Copied!").
+- Right: contact form (name, email, message) with validation, loading state, and animated success message sliding in from the left (Framer Motion). Submits via Web3Forms; falls back to `mailto:` as described in section 3.
+- Footer: "© 2026 Lakhan Jadhwant" + "Back to top" button.
+
+---
+
+## 12. CSS (in `src/index.css`)
+
+```css
+@tailwind base; @tailwind components; @tailwind utilities;
+
+html { scroll-behavior: auto; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 30s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+@keyframes float-y { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+.animate-float-y { animation: float-y 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee, .animate-float-y { animation: none; }
+}
+```
+Also add the font families (`font-heading: Syne`, `font-body: Satoshi`) to `tailwind.config.js`, plus custom colors/shadows if needed.
+
+---
+
+## 13. Suggested File Structure
+```
+.github/workflows/deploy.yml
+public/ (profile.webp, resume PDF)
+src/
+  main.jsx, App.jsx, index.css
+  data/portfolio.js
+  hooks/useLenis.js, useNetworkCanvas.js
+  components/
+    Navbar.jsx, ScrollProgress.jsx, Hero.jsx
+    bento/ (BentoGrid.jsx, IntroCard.jsx, ProfileCard.jsx, StatCard.jsx,
+            TechMarquee.jsx, SkillsCard.jsx, EducationCard.jsx, CertificatesCard.jsx)
+    Experience.jsx, Projects.jsx, Contact.jsx, Footer.jsx
+index.html, vite.config.js, tailwind.config.js, postcss.config.js
+package.json, README.md, .env.example, .gitignore
+```
+
+---
+
+## 14. Key Implementation Notes
+1. **No media dependencies:** the Hero is fully code-generated; no video, frames or FFmpeg anywhere.
+2. **Performance:** `will-change: transform` only where needed; lazy-load below-the-fold images; pause the hero canvas when off-screen or tab hidden; cap node count on mobile.
+3. **GSAP:** register ScrollTrigger once; use `gsap.context()` + `ctx.revert()`; call `ScrollTrigger.refresh()` after fonts load.
+4. **Lenis + ScrollTrigger sync** exactly as described in section 6.
+5. **Animation robustness:** `ScrollTrigger.batch()` for grid items; initial `opacity: 0` set with `gsap.set()`; no content should remain invisible if JS animation fails (add a 3s safety timeout that forces visibility).
+6. **No negative margins** for layout. Use grid spans and gap only.
+7. **Base path:** all asset URLs through `import.meta.env.BASE_URL` (see section 3).
+8. **No browser-storage dependence** and no secrets committed; the Web3Forms key is optional via env var.
+9. Keep components small, commented, and readable so I can edit them later.
+
+---
+
+## 15. Acceptance Checklist (verify before finishing)
+- [ ] `npm run dev` starts with no errors; `npm run build` succeeds.
+- [ ] Hero network animation runs smoothly at 60fps, reacts to scroll (scale + captions + fade-out), and has no jitter on mobile address-bar changes.
+- [ ] No reference to video, frames, FFmpeg or poster images anywhere in the code.
+- [ ] All resume content from `portfolio.js` appears correctly (no invented metrics or experience).
+- [ ] Layout is clean at 375px, 768px, 1280px, and 1920px wide; no horizontal scroll.
+- [ ] Missing images/logos degrade gracefully; nothing crashes.
+- [ ] Contact form works (Web3Forms) or falls back to `mailto:`.
+- [ ] GitHub Actions workflow present; README explains how to publish on GitHub Pages.
